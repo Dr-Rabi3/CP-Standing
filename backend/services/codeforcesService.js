@@ -240,7 +240,7 @@ export const getContestStandings = async (contestId, handles, asSheet = false) =
 };
 
 // Get contest information (uses CONTEST API keys)
-export const getContestInfo = async (contestId, asSheets) => {
+export const getContestInfo = async (contestId, asSheets = false) => {
   try {
     const result = await makeAuthenticatedRequest(
       "contest.standings",
@@ -259,7 +259,7 @@ export const getContestInfo = async (contestId, asSheets) => {
 };
 
 // Get multiple contests information in bulk
-export const getMultipleContestsInfo = async (contestIds, asSheets) => {
+export const getMultipleContestsInfo = async (contestIds, asSheets = false) => {
   try {
     if (!contestIds || contestIds.length === 0) {
       throw new Error("Contest IDs array is empty");

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Award, Code, Medal, Star, Trophy } from "lucide-react";
 import search from "../assets/icon/search.svg";
+import { Link } from "react-router-dom";
 
 function Standing({ trainingStandings }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,6 +20,7 @@ function Standing({ trainingStandings }) {
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
+  if (!filteredStandings) return null;
   return (
     <div className="space-y-[20px] mb-[50px]">
       <header className="mx-auto mt-[20px] flex flex-wrap justify-center md:justify-between gap-[10px] md:gap-[0px]">
@@ -56,7 +58,7 @@ function Standing({ trainingStandings }) {
             Points
           </div>
         </div>
-        <div className="min-w-[800px] max-h-[500px] overflow-y-auto custom-scroll">
+        <div className="min-w-[800px] max-h-screen overflow-y-auto custom-scroll">
           {filteredStandings.length === 0 ? (
             <div className="flex justify-center items-center h-32 text-white">
               No trainees found matching "{searchQuery}"
@@ -103,9 +105,10 @@ function Standing({ trainingStandings }) {
 
               <div className="font-bold text-gray-800 text-base">{student.name}</div>
 
-              <div className="w-fit inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">
+              <Link to={`https://codeforces.com/profile/${student.handle}`} target="_blank"
+              className="w-fit inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">
                 @{student.handle}
-              </div>
+              </Link>
 
               <div className="text-base text-gray-700 font-medium">{student.coach}</div>
 

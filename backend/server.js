@@ -7,6 +7,7 @@ import sheetRoutes from "./routes/sheetRoutes.js";
 import traineeRoutes from "./routes/traineeRoutes.js";
 import trainingRoutes from "./routes/trainingRoutes.js";
 import standingsRoutes from "./routes/standingsRoutes.js";
+import { initializeCacheScheduler } from "./services/redisCacheService.js";
 
 dotenv.config();
 
@@ -30,6 +31,21 @@ app.use("/api/standings", standingsRoutes);
 app.get("/api/health", (req, res) => {
   res.json({ status: "OK", message: "Server is running" });
 });
+
+// ⭐ THIS IS WHERE YOU CALL IT ⭐
+// Initialize cache scheduler (runs at midnight every day)
+initializeCacheScheduler();
+
+// Optional: Populate cache on server start
+const populateInitialCache = process.env.POPULATE_CACHE_ON_START === 'true';
+if (populateInitialCache) {
+  console.log("🔄 Populating initial cache...");
+  updateAllCache().then(() => {
+    console.log("✅ Initial cache population completed");
+  }).catch((error) => {
+    console.error("❌ Initial cache population failed:", error.message);
+  });
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {

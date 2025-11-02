@@ -17,7 +17,7 @@ function App() {
   const [trainingData, setTrainingData] = useState({
     topContestants: [],
     standings: [],
-    trainingInfo: null
+    trainingSheets:[] 
   });
 
   useEffect(() => {
@@ -29,9 +29,14 @@ function App() {
         const trainingResponse = await trainingApi.getTrainingById(trainingId);
         
         if (trainingResponse.success && trainingResponse.data) {
+          const items = [
+            ...trainingResponse.data.sheets.map(s => ({ ...s, type: "sheet" })),
+            ...trainingResponse.data.contests.map(c => ({ ...c, type: "contest" }))
+          ];
+          items.sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
           setTrainingData(prev => ({
             ...prev,
-            trainingInfo: trainingResponse.data
+            trainingSheets: items
           }));
         }
 
@@ -112,28 +117,29 @@ function App() {
         <div className="mb-8 space-y-[20px]">
           <h1 className="font-[Audiowide] text-[#fff] text-[25px] sm:w-[50%]">Sheets & Contests</h1>
           <div className="grid grid-cols-1 gap-6">
-            {trainingData.trainingInfo && trainingData.trainingInfo.sheets.map((sheet) => (
-              <div 
-                key={sheet._id}
-                onClick={() => navigate(`/${trainingId}/training/${sheet._id}`)}
-                className="bg-white rounded-[20px] shadow-lg transition-all cursor-pointer p-6 border-l-[10px] border-[#1D4ED8]"
-              >
-                <div className="flex justify-between items-start mb-5">
-                  <h3 className="text-[22px] font-bold font-[Archivo]">{sheet.title}</h3>
+            {trainingData.trainingSheets && trainingData.trainingSheets
+              .map((item) => (
+                <div 
+                  key={item._id}
+                  onClick={() => navigate(`/${trainingId}/training/${item._id}`, { state: { type: item.type } })}
+                  className="bg-white rounded-[20px] shadow-lg transition-all cursor-pointer p-6 border-l-[10px] border-[#1D4ED8]"
+                >
+                  <div className="flex justify-between items-start mb-5">
+                    <h3 className="text-[22px] font-bold font-[Archivo]">{item.title}</h3>
+                  </div>
+                  <p className="flex items-center gap-2 text-[15px] mb-2">
+                    <Code className="w-4 h-4" />
+                    {item.problems.length} Problems
+                  </p>
+                  <p className="flex items-center gap-2 text-[15px]">
+                    <Clock className="w-4 h-4" />
+                    {item.duration} Duration
+                  </p>
+                  <div className="flex justify-end">
+                    {new Date(item.addedAt).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+                  </div>
                 </div>
-                <p className="flex items-center gap-2 text-[15px] mb-2">
-                  <Code className="w-4 h-4" />
-                  {sheet.problems.length} Problems
-                </p>
-                <p className="flex items-center gap-2 text-[15px]">
-                  <Clock className="w-4 h-4" />
-                  {sheet.duration} Duration
-                </p>
-                <div className="flex justify-end">
-                  {new Date(sheet.addedAt).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
 

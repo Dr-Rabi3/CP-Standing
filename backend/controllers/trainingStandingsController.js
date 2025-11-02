@@ -1,122 +1,48 @@
 import Training from "../models/Training.js";
-import Trainee from "../models/Trainee.js";
-import Sheet from "../models/Sheet.js";
-import Contest from "../models/Contest.js";
 import { 
-  checkSolvedProblems,
-  getContestStandings as fetchCFStandings, 
   calculatePoints 
 } from "../services/codeforcesService.js";
+import { getOrFetch, fetchAndCacheOverallStandings } from "../services/redisCacheService.js";
 
 /**
- * Get overall standings for a training
- * Combines performance from all sheets and contests
+ * Generate cache key
  */
-export const getTrainingOverallStandings = async (req, res) => {
+const generateCacheKey = (type, trainingId, itemId = null) => {
+  if (itemId) {
+    return `standings:${type}:${trainingId}:${itemId}`;
+  }
+  return `standings:${type}:${trainingId}`;
+};
+
+/**
+ * Get overall training standings (auto cache-or-fetch)
+ */
+export const getOverallTrainingStandings = async (req, res) => {
   try {
     const { trainingId } = req.params;
     
-    const training = await Training.findById(trainingId)
-      .populate("trainees")
-      .populate("sheets")
-      .populate("contests");
+    const cacheKey = generateCacheKey("overall", trainingId);
     
-    if (!training) {
-      return res.status(404).json({ success: false, error: "Training not found" });
-    }
-    
-    if (training.trainees.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "No trainees in this training"
-      });
-    }
-    
-    console.log(`Calculating overall standings for ${training.trainees.length} trainees...`);
-    
-    // Get all items (sheets + contests) with their problems
-    const items = [
-      ...training.sheets.map(s => ({ ...s.toObject(), type: "Sheet" })),
-      ...training.contests.map(c => ({ ...c.toObject(), type: "Contest" }))
-    ];
-    const handles = training.trainees.map(t => t.handle);
-
-     // Map to accumulate total solved per trainee
-    const traineeTotals = new Map();
-
-    // For each item, calculate standings
-    for (const item of items) {
-      try {
-        const cfStanding = await fetchCFStandings(
-          item.cfContestId,
-          handles,
-          item.type === "Sheet"
-        );
-
-        // Loop over each trainee
-        for (const trainee of training.trainees) {
-          const cfData = cfStanding.find((s) => s.handle === trainee.handle);
-          const solvedCount = cfData
-            ? cfData.problemResults.filter((pr) => pr.points > 0).length
-            : 0;
-          // Update trainee's total solved problems
-          const currentTotal = traineeTotals.get(trainee.handle) || {
-            traineeId: trainee._id,
-            name: trainee.name,
-            handle: trainee.handle,
-            rating: trainee.rating,
-            color: trainee.color,
-            totalSolved: 0,
-            totalPoints: 0,
-            titlePhoto: trainee.titlePhoto,
-            coach: trainee.coach,
-            items: [], // store per-item performance
-          };
-
-          currentTotal.totalSolved += solvedCount;
-          currentTotal.totalPoints += cfData ? cfData.points : 0;
-
-          currentTotal.items.push({
-            itemId: item._id,
-            title: item.title,
-            type: item.type,
-            solvedCount,
-            totalProblems: item.problems.length,
-            points: cfData ? cfData.points : 0,
-          });
-
-          traineeTotals.set(trainee.handle, currentTotal);
-        }
-      } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+    const result = await getOrFetch(cacheKey, async () => {
+      const training = await Training.findById(trainingId)
+        .populate("trainees")
+        .populate("sheets")
+        .populate("contests");
+        
+      if (!training) {
+        throw new Error("Training not found");
       }
-    }
-    // Convert Map to sorted array (highest solved first)
-    const standings = Array.from(traineeTotals.values()).sort(
-      (a, b) =>
-        b.totalSolved - a.totalSolved || b.totalPoints - a.totalPoints
-    );
-    
-    
-    // Add rank
-    standings.forEach((standing, index) => {
-      standing.rank = index + 1;
+      
+      return await fetchAndCacheOverallStandings(training);
     });
     
     res.status(200).json({
       success: true,
-      data: {
-        training: {
-          id: training._id,
-          title: training.title,
-          level: training.level,
-          sheetsCount: training.sheets.length,
-          contestsCount: training.contests.length,
-          totalItems: items.length,
-          totalProblems: items.reduce((sum, item) => sum + item.problems.length, 0),
-        },
-        standings,
-      },
+      data: result.data,
+      fromCache: result.fromCache,
+      message: result.fromCache 
+        ? "Data retrieved from cache" 
+        : "Fresh data fetched and cached"
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

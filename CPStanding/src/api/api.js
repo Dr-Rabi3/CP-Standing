@@ -39,6 +39,20 @@ export const trainingApi = {
       throw error;
     }
   },
+
+  /**
+   * Get all trainings
+   * @returns {Promise<Array<Object>>} The training data
+   */
+  getAllTrainings: async () => {
+    try {
+      const response = await api.get(`/trainings`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching trainings:', error);
+      throw error;
+    }
+  },
 };
 
 // Standings API
@@ -55,6 +69,22 @@ export const standingsApi = {
       return response.data;
     } catch (error) {
       console.error('Error fetching sheet standings:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get standings for a specific training contest
+   * @param {string} trainingId - The ID of the training
+   * @param {string} contestId - The ID of the contest
+   * @returns {Promise<Object>} The standings data
+   */
+  getContestStandings: async (trainingId, contestId) => {
+    try {
+      const response = await api.get(`/standings/trainings/${trainingId}/contests/${contestId}/standings`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching contest standings:', error);
       throw error;
     }
   },

@@ -5,19 +5,23 @@ import App from './App.jsx'
 import ContestStanding from './components/ContestStanding.jsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import RootLayout from './components/RootLayout.jsx'
-
+import LandingPage from './components/LandingPage.jsx'
 
 const router = createBrowserRouter([
   {
     path: "/",
+    element: <LandingPage />
+  },
+  {
+    path: "/:trainingId",
     element: <RootLayout />,
     children: [
       {
-        path: "/:trainingId",
+        index: true,
         element: <App />,
       },
       {
-        path: "/:trainingId/training/:contestId",
+        path: "training/:contestId",
         element: <ContestStanding />,
       }
     ]

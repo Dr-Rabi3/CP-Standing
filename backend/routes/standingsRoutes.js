@@ -9,7 +9,7 @@ import {
   bulkUpdateContestPerformance,
 } from "../controllers/standingsController.js";
 import {
-  getTrainingOverallStandings,
+  getOverallTrainingStandings,
   getTrainingOverallStandingsFiltered,
   getTrainingStandingsSummary,
 } from "../controllers/trainingStandingsController.js";
@@ -17,7 +17,7 @@ import {
 const router = express.Router();
 
 // Training overall standings (before specific routes)
-router.get("/trainings/:trainingId/overall", getTrainingOverallStandings);
+router.get("/trainings/:trainingId/overall", getOverallTrainingStandings);
 router.get("/trainings/:trainingId/overall/filtered", getTrainingOverallStandingsFiltered);
 router.get("/trainings/:trainingId/summary", getTrainingStandingsSummary);
 

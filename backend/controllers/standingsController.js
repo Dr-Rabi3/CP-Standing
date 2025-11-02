@@ -1,223 +1,107 @@
 import Training from "../models/Training.js";
-import Trainee from "../models/Trainee.js";
 import Sheet from "../models/Sheet.js";
 import Contest from "../models/Contest.js";
 import {
-  getUserInfo,
-  checkSolvedProblems,
-  getContestStandings as fetchCFStandings,
-  calculatePoints,
-  getRatingColor,
-} from "../services/codeforcesService.js";
+  getOrFetch,
+  fetchAndCacheSheetStandings,
+  fetchAndCacheContestStandings,
+  fetchAndCacheOverallStandings,
+} from "../services/redisCacheService.js";
 
-
-// Helper: Extract Codeforces contest ID from contest
-const extractContestId = (contest) => {
-  // If contest has a cfContestId field, use it
-  if (contest.cfContestId) return contest.cfContestId;
-  
-  // Try to extract from first problem (e.g., "1234A" -> "1234")
-  if (contest.problems && contest.problems.length > 0) {
-    const match = contest.problems[0].name.match(/^(\d+)[A-Z]/);
-    if (match) return match[1];
+/**
+ * Generate cache key
+ */
+const generateCacheKey = (type, trainingId, itemId = null) => {
+  if (itemId) {
+    return `standings:${type}:${trainingId}:${itemId}`;
   }
-  
-  return null;
+  return `standings:${type}:${trainingId}`;
 };
 
-// Get sheet standings (uses individual checks - Approach 1)
+/**
+ * Get sheet standings (auto cache-or-fetch)
+ */
 export const getSheetStandings = async (req, res) => {
   try {
     const { trainingId, sheetId } = req.params;
     
-    const training = await Training.findById(trainingId).populate("trainees");
-    if (!training) {
-      return res.status(404).json({ success: false, error: "Training not found" });
-    }
+    const cacheKey = generateCacheKey("sheet", trainingId, sheetId);
     
-    const sheet = await Sheet.findById(sheetId);
-    if (!sheet) {
-      return res.status(404).json({ success: false, error: "Sheet not found" });
-    }
-    
-    if (!training.sheets.includes(sheetId)) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Sheet is not part of this training" 
-      });
-    }
-    
-    
-    const cfSheetId = sheet.cfContestId;
-    try {
-      console.log(`Fetching sheet standings for ${training.trainees.length} trainees...`);
-      const handles = training.trainees.map(t => t.handle);
-      const cfStandings = await fetchCFStandings(cfSheetId, handles, true);
-
-      // Map CF standings to our format
-      const standings = training.trainees.map(trainee => {
-        const cfData = cfStandings.find(s => s.handle === trainee.handle);
-        
-        if (cfData) {
-          const solvedCount = cfData.problemResults.filter(
-            pr => pr.points > 0
-          ).length;
-          
-          return {
-            traineeId: trainee._id,
-            name: trainee.name,
-            handle: trainee.handle,
-            rating: trainee.rating,
-            titlePhoto: trainee.titlePhoto,
-            color: trainee.color,
-            rank: cfData.rank,
-            solvedCount,
-            totalProblems: sheet.problems.length,
-            points: cfData.points,
-            penalty: cfData.penalty,
-            problemResults: cfData.problemResults,
-            coach: trainee.coach,
-          };
-        }
-        
-        // Trainee didn't participate
-        return {
-          traineeId: trainee._id,
-          name: trainee.name,
-          handle: trainee.handle,
-          rating: trainee.rating,
-          titlePhoto: trainee.titlePhoto,
-          color: trainee.color,
-          rank: null,
-          solvedCount: 0,
-          totalProblems: sheet.problems.length,
-          points: 0,
-          participated: false,
-          coach: trainee.coach,
-        };
-      });
-      standings.sort((a, b) => (b.points || 0) - (a.points || 0));
+    // Use getOrFetch: returns cache if available, otherwise fetches and caches
+    const result = await getOrFetch(cacheKey, async () => {
+      // Fetch function - only called if not in cache
+      const training = await Training.findById(trainingId).populate("trainees");
+      if (!training) {
+        throw new Error("Training not found");
+      }
       
-      return res.status(200).json({
-        success: true,
-        method: "official_standings",
-        data: {
-          sheet: {
-            id: sheet._id,
-            title: sheet.title,
-            cfSheetId,
-            totalProblems: sheet.problems.length,
-          },
-          standings,
-        },
-      });
-    } catch (error) {
-      console.error(`Error fetching sheet standings: ${error.message}`);
-      return res.status(500).json({ success: false, error: error.message });
-    }
+      const sheet = await Sheet.findById(sheetId);
+      if (!sheet) {
+        throw new Error("Sheet not found");
+      }
+      
+      if (!training.sheets.includes(sheetId)) {
+        throw new Error("Sheet is not part of this training");
+      }
+      
+      return await fetchAndCacheSheetStandings(training, sheet);
+    });
+    
+    res.status(200).json({
+      success: true,
+      data: result.data,
+      fromCache: result.fromCache,
+      message: result.fromCache 
+        ? "Data retrieved from cache" 
+        : "Fresh data fetched and cached"
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 };
 
-// Get contest standings (uses bulk fetch - Approach 2)
+
+/**
+ * Get contest standings (auto cache-or-fetch)
+ */
 export const getContestStandings = async (req, res) => {
   try {
     const { trainingId, contestId } = req.params;
     
-    const training = await Training.findById(trainingId).populate("trainees");
-    if (!training) {
-      return res.status(404).json({ success: false, error: "Training not found" });
-    }
+    const cacheKey = generateCacheKey("contest", trainingId, contestId);
     
-    const contest = await Contest.findById(contestId);
-    if (!contest) {
-      return res.status(404).json({ success: false, error: "Contest not found" });
-    }
-    
-    if (!training.contests.includes(contestId)) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Contest is not part of this training" 
-      });
-    }
-    
-    const cfContestId = extractContestId(contest);
-    
-    // APPROACH 2: Try to get official standings first (optimal)
-    if (cfContestId) {
-      try {
-        console.log(`Fetching CF contest ${cfContestId} standings (1 API call)...`);
-        
-        const handles = training.trainees.map(t => t.handle);
-        const cfStandings = await fetchCFStandings(cfContestId, handles);
-        
-        // Map CF standings to our format
-        const standings = training.trainees.map(trainee => {
-          const cfData = cfStandings.find(s => s.handle === trainee.handle);
-          
-          if (cfData) {
-            const solvedCount = cfData.problemResults.filter(
-              pr => pr.points > 0
-            ).length;
-            
-            return {
-              traineeId: trainee._id,
-              name: trainee.name,
-              handle: trainee.handle,
-              rating: trainee.rating,
-              titlePhoto: trainee.titlePhoto,
-              color: trainee.color,
-              rank: cfData.rank,
-              solvedCount,
-              totalProblems: contest.problems.length,
-              points: cfData.points,
-              penalty: cfData.penalty,
-              problemResults: cfData.problemResults,
-            };
-          }
-          
-          // Trainee didn't participate
-          return {
-            traineeId: trainee._id,
-            name: trainee.name,
-            handle: trainee.handle,
-            rating: trainee.rating,
-            titlePhoto: trainee.titlePhoto,
-            color: trainee.color,
-            rank: null,
-            solvedCount: 0,
-            totalProblems: contest.problems.length,
-            points: 0,
-            participated: false,
-          };
-        });
-        
-        standings.sort((a, b) => (b.points || 0) - (a.points || 0));
-        
-        return res.status(200).json({
-          success: true,
-          method: "official_standings",
-          data: {
-            contest: {
-              id: contest._id,
-              title: contest.title,
-              cfContestId,
-              totalProblems: contest.problems.length,
-            },
-            standings,
-          },
-        });
-      } catch (cfError) {
-        console.warn(`Failed to fetch CF standings: ${cfError.message}`);
-        console.log("Falling back to individual submission checks...");
+    const result = await getOrFetch(cacheKey, async () => {
+      const training = await Training.findById(trainingId).populate("trainees");
+      if (!training) {
+        throw new Error("Training not found");
       }
-    }
+      
+      const contest = await Contest.findById(contestId);
+      if (!contest) {
+        throw new Error("Contest not found");
+      }
+      
+      if (!training.contests.includes(contestId)) {
+        throw new Error("Contest is not part of this training");
+      }
+      
+      return await fetchAndCacheContestStandings(training, contest);
+    });
     
+    res.status(200).json({
+      success: true,
+      data: result.data,
+      fromCache: result.fromCache,
+      message: result.fromCache 
+        ? "Data retrieved from cache" 
+        : "Fresh data fetched and cached"
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+
 
 // Sync trainee data from Codeforces
 export const syncTraineeFromCodeforces = async (req, res) => {
@@ -512,4 +396,4 @@ export const bulkUpdateContestPerformance = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
-};
+};  
