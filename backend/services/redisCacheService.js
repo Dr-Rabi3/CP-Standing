@@ -368,19 +368,19 @@ export const fetchAndCacheOverallStandings = async (training) => {
     // Convert Map to sorted array (highest solved first)
     const standings = Array.from(traineeTotals.values()).sort((a, b) => {
       // Primary sort: solved problems (more is better)
-      const solvedDiff = (b.solvedCount || 0) - (a.solvedCount || 0);
+      const solvedDiff = (a.solvedCount || 0) - (b.solvedCount || 0);
       if (solvedDiff !== 0) return solvedDiff;
 
       // Secondary sort: penalty (lower is better)
       const penaltyA = a.penalty ?? Infinity;
       const penaltyB = b.penalty ?? Infinity;
-      const penaltyDiff = penaltyA - penaltyB;
+      const penaltyDiff = penaltyB - penaltyA;
       if (penaltyDiff !== 0) return penaltyDiff;
 
       // Tertiary sort: handle (alphabetically)
-      return (a.handle || "").localeCompare(b.handle || "");
+      return (b.handle || "").localeCompare(a.handle || "");
     });
-    
+
     // Add rank
     standings.forEach((standing, index) => {
       standing.rank = index + 1;
