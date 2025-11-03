@@ -365,22 +365,20 @@ export const fetchAndCacheOverallStandings = async (training) => {
         res.status(500).json({ success: false, error: error.message });
       }
     }
-    // Convert Map to sorted array (highest solved first)
     const standings = Array.from(traineeTotals.values()).sort((a, b) => {
-      // Primary sort: solved problems (more is better)
-      const solvedDiff = (a.solvedCount || 0) - (b.solvedCount || 0);
+      // Primary sort: solved problems (more is better - decreasing)
+      const solvedDiff = (b.solvedCount || 0) - (a.solvedCount || 0);
       if (solvedDiff !== 0) return solvedDiff;
 
-      // Secondary sort: penalty (lower is better)
+      // Secondary sort: penalty (less is better - increasing)
       const penaltyA = a.penalty ?? Infinity;
       const penaltyB = b.penalty ?? Infinity;
-      const penaltyDiff = penaltyB - penaltyA;
+      const penaltyDiff = penaltyA - penaltyB;
       if (penaltyDiff !== 0) return penaltyDiff;
 
-      // Tertiary sort: handle (alphabetically)
-      return (b.handle || "").localeCompare(a.handle || "");
+      // Tertiary sort: handle (alphabetically A to Z)
+      return (a.handle || "").localeCompare(b.handle || "");
     });
-
     // Add rank
     standings.forEach((standing, index) => {
       standing.rank = index + 1;
