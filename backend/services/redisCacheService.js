@@ -365,9 +365,10 @@ export const fetchAndCacheOverallStandings = async (training) => {
         res.status(500).json({ success: false, error: error.message });
       }
     }
+    
     const standings = Array.from(traineeTotals.values()).sort((a, b) => {
-      // Primary sort: solved problems (more is better - decreasing)
-      const solvedDiff = (b.solvedCount || 0) - (a.solvedCount || 0);
+      // Primary sort: total solved problems (more is better - decreasing)
+      const solvedDiff = (b.totalSolved || 0) - (a.totalSolved || 0);
       if (solvedDiff !== 0) return solvedDiff;
 
       // Secondary sort: penalty (less is better - increasing)
