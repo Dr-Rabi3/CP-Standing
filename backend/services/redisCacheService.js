@@ -155,10 +155,27 @@ export const fetchAndCacheSheetStandings = async (training, sheet) => {
           totalProblems: sheet.problems.length,
           points: 0,
           participated: false,
+          penalty: 0,
           coach: trainee.coach,
         };
       });
-      standings.sort((a, b) => (b.points || 0) - (a.points || 0));
+
+      // Sort by penalty (ascending), then by handle (alphabetically)
+      // Sort by solved problems (descending), then penalty (ascending), then handle (alphabetically)
+      standings.sort((a, b) => {
+        // Primary sort: solved problems (more is better)
+        const solvedDiff = (b.solvedCount || 0) - (a.solvedCount || 0);
+        if (solvedDiff !== 0) return solvedDiff;
+
+        // Secondary sort: penalty (lower is better)
+        const penaltyA = a.penalty ?? Infinity;
+        const penaltyB = b.penalty ?? Infinity;
+        const penaltyDiff = penaltyA - penaltyB;
+        if (penaltyDiff !== 0) return penaltyDiff;
+
+        // Tertiary sort: handle (alphabetically)
+        return (a.handle || "").localeCompare(b.handle || "");
+      });
 
       const cacheData = {
         sheet: {
@@ -233,6 +250,7 @@ export const fetchAndCacheContestStandings = async (training, contest) => {
           color: trainee.color,
           rank: null,
           solvedCount: 0,
+          penalty: 0,
           totalProblems: contest.problems.length,
           points: 0,
           participated: false,
@@ -240,7 +258,21 @@ export const fetchAndCacheContestStandings = async (training, contest) => {
         };
       });
 
-      standings.sort((a, b) => (b.points || 0) - (a.points || 0));
+      // Sort by solved problems (descending), then penalty (ascending), then handle (alphabetically)
+      standings.sort((a, b) => {
+        // Primary sort: solved problems (more is better)
+        const solvedDiff = (b.solvedCount || 0) - (a.solvedCount || 0);
+        if (solvedDiff !== 0) return solvedDiff;
+
+        // Secondary sort: penalty (lower is better)
+        const penaltyA = a.penalty ?? Infinity;
+        const penaltyB = b.penalty ?? Infinity;
+        const penaltyDiff = penaltyA - penaltyB;
+        if (penaltyDiff !== 0) return penaltyDiff;
+
+        // Tertiary sort: handle (alphabetically)
+        return (a.handle || "").localeCompare(b.handle || "");
+      });
 
       const cacheData = {
         contest: {
@@ -269,16 +301,18 @@ export const fetchAndCacheContestStandings = async (training, contest) => {
  */
 export const fetchAndCacheOverallStandings = async (training) => {
   try {
-    console.log(`Calculating overall standings for ${training.trainees.length} trainees...`);
-    
+    console.log(
+      `Calculating overall standings for ${training.trainees.length} trainees...`
+    );
+
     // Get all items (sheets + contests) with their problems
     const items = [
-      ...training.sheets.map(s => ({ ...s.toObject(), type: "Sheet" })),
-      ...training.contests.map(c => ({ ...c.toObject(), type: "Contest" }))
+      ...training.sheets.map((s) => ({ ...s.toObject(), type: "Sheet" })),
+      ...training.contests.map((c) => ({ ...c.toObject(), type: "Contest" })),
     ];
-    const handles = training.trainees.map(t => t.handle);
+    const handles = training.trainees.map((t) => t.handle);
 
-     // Map to accumulate total solved per trainee
+    // Map to accumulate total solved per trainee
     const traineeTotals = new Map();
 
     // For each item, calculate standings
@@ -307,11 +341,13 @@ export const fetchAndCacheOverallStandings = async (training) => {
             totalPoints: 0,
             titlePhoto: trainee.titlePhoto,
             coach: trainee.coach,
+            penalty: 0,
             items: [], // store per-item performance
           };
 
           currentTotal.totalSolved += solvedCount;
           currentTotal.totalPoints += cfData ? cfData.points : 0;
+          currentTotal.penalty += cfData ? cfData.penalty : 0;
 
           currentTotal.items.push({
             itemId: item._id,
@@ -320,6 +356,7 @@ export const fetchAndCacheOverallStandings = async (training) => {
             solvedCount,
             totalProblems: item.problems.length,
             points: cfData ? cfData.points : 0,
+            penalty: cfData ? cfData.penalty : 0,
           });
 
           traineeTotals.set(trainee.handle, currentTotal);
@@ -329,11 +366,20 @@ export const fetchAndCacheOverallStandings = async (training) => {
       }
     }
     // Convert Map to sorted array (highest solved first)
-    const standings = Array.from(traineeTotals.values()).sort(
-      (a, b) =>
-        b.totalSolved - a.totalSolved || b.totalPoints - a.totalPoints
-    );
-    
+    const standings = Array.from(traineeTotals.values()).sort((a, b) => {
+      // Primary sort: solved problems (more is better)
+      const solvedDiff = (b.solvedCount || 0) - (a.solvedCount || 0);
+      if (solvedDiff !== 0) return solvedDiff;
+
+      // Secondary sort: penalty (lower is better)
+      const penaltyA = a.penalty ?? Infinity;
+      const penaltyB = b.penalty ?? Infinity;
+      const penaltyDiff = penaltyA - penaltyB;
+      if (penaltyDiff !== 0) return penaltyDiff;
+
+      // Tertiary sort: handle (alphabetically)
+      return (a.handle || "").localeCompare(b.handle || "");
+    });
     
     // Add rank
     standings.forEach((standing, index) => {
