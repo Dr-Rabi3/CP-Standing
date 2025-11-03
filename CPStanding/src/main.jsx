@@ -6,7 +6,6 @@ import ContestStanding from './components/ContestStanding.jsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import RootLayout from './components/RootLayout.jsx'
 import LandingPage from './components/LandingPage.jsx'
-import { Analytics } from "@vercel/analytics/next"
 
 const router = createBrowserRouter([
   {
@@ -32,6 +31,5 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <RouterProvider router={router}/>
-    <Analytics />
   </StrictMode>,
 )
