@@ -34,6 +34,76 @@ const generateCacheKey = (type, trainingId, itemId = null) => {
 };
 
 /**
+ * Calculate camp penalty for a problem
+ * Camp penalty formula:
+ * - First wrong submission: no increase (0)
+ * - Second wrong submission: +2
+ * - Third wrong submission: +4 (2*2)
+ * - Fourth wrong submission: +8 (4*2)
+ * - And so on (each is previous * 2)
+ * 
+ * @param {number} rejectedAttemptCount - Number of wrong submissions before solving
+ * @param {number} bestSubmissionTimeSeconds - Time when problem was solved (in seconds)
+ * @returns {number} - Calculated penalty in minutes
+ */
+const calculateCampPenalty = (rejectedAttemptCount, bestSubmissionTimeSeconds) => {
+  // Convert time to minutes (Codeforces penalty is in minutes)
+  const timePenalty = Math.floor(bestSubmissionTimeSeconds / 60);
+  
+  // Calculate wrong submission penalty
+  let wrongSubmissionPenalty = 0;
+  if (rejectedAttemptCount > 0) {
+    // First wrong: 0, Second: 2, Third: 4, Fourth: 8, etc.
+    // Pattern: 0, 2, 4, 8, 16, 32...
+    // For rejectedAttemptCount = 1: penalty = 0
+    // For rejectedAttemptCount = 2: penalty = 2
+    // For rejectedAttemptCount = 3: penalty = 2 + 4 = 6
+    // For rejectedAttemptCount = 4: penalty = 2 + 4 + 8 = 14
+    // etc.
+    
+    if (rejectedAttemptCount === 1) {
+      wrongSubmissionPenalty = 0;
+    } else {
+      // Start from second wrong submission
+      let penalty = 0;
+      let increment = 2; // Second wrong is +2
+      
+      for (let i = 2; i <= rejectedAttemptCount; i++) {
+        penalty += increment;
+        increment *= 2; // Each subsequent wrong doubles the increment
+      }
+      
+      wrongSubmissionPenalty = penalty;
+    }
+  }
+  
+  return timePenalty + wrongSubmissionPenalty;
+};
+
+/**
+ * Recalculate penalty for camp type training
+ * @param {Array} problemResults - Array of problem results from Codeforces
+ * @param {number} originalPenalty - Original penalty from Codeforces
+ * @returns {number} - Recalculated penalty for camp
+ */
+const recalculateCampPenalty = (problemResults, originalPenalty) => {
+  let totalPenalty = 0;
+  
+  for (const problemResult of problemResults) {
+    // Only calculate penalty for solved problems
+    if (problemResult.points > 0 && problemResult.bestSubmissionTimeSeconds) {
+      const problemPenalty = calculateCampPenalty(
+        problemResult.rejectedAttemptCount || 0,
+        problemResult.bestSubmissionTimeSeconds
+      );
+      totalPenalty += problemPenalty;
+    }
+  }
+  
+  return totalPenalty;
+};
+
+/**
  * Get data from cache
  */
 export const getFromCache = async (key) => {
@@ -126,6 +196,13 @@ export const fetchAndCacheSheetStandings = async (training, sheet) => {
           const solvedCount = cfData.problemResults.filter(
             (pr) => pr.points > 0
           ).length;
+          
+          // Calculate penalty based on training type
+          let penalty = cfData.penalty;
+          if (training.type === "camp") {
+            penalty = recalculateCampPenalty(cfData.problemResults, cfData.penalty);
+          }
+          
           return {
             traineeId: trainee._id,
             name: trainee.name,
@@ -137,7 +214,7 @@ export const fetchAndCacheSheetStandings = async (training, sheet) => {
             solvedCount,
             totalProblems: sheet.problems.length,
             points: cfData.points,
-            penalty: cfData.penalty,
+            penalty: penalty,
             problemResults: cfData.problemResults,
             coach: trainee.coach,
           };
@@ -223,6 +300,12 @@ export const fetchAndCacheContestStandings = async (training, contest) => {
             (pr) => pr.points > 0
           ).length;
 
+          // Calculate penalty based on training type
+          let penalty = cfData.penalty;
+          if (training.type === "camp") {
+            penalty = recalculateCampPenalty(cfData.problemResults, cfData.penalty);
+          }
+
           return {
             traineeId: trainee._id,
             name: trainee.name,
@@ -234,7 +317,7 @@ export const fetchAndCacheContestStandings = async (training, contest) => {
             solvedCount,
             totalProblems: contest.problems.length,
             points: cfData.points,
-            penalty: cfData.penalty,
+            penalty: penalty,
             problemResults: cfData.problemResults,
             coach: trainee.coach,
           };
@@ -345,9 +428,15 @@ export const fetchAndCacheOverallStandings = async (training) => {
             items: [], // store per-item performance
           };
 
+          // Calculate penalty based on training type
+          let itemPenalty = cfData ? cfData.penalty : 0;
+          if (training.type === "camp" && cfData) {
+            itemPenalty = recalculateCampPenalty(cfData.problemResults, cfData.penalty);
+          }
+
           currentTotal.totalSolved += solvedCount;
           currentTotal.totalPoints += cfData ? cfData.points : 0;
-          currentTotal.penalty += cfData ? cfData.penalty : 0;
+          currentTotal.penalty += itemPenalty;
 
           currentTotal.items.push({
             itemId: item._id,
@@ -356,13 +445,15 @@ export const fetchAndCacheOverallStandings = async (training) => {
             solvedCount,
             totalProblems: item.problems.length,
             points: cfData ? cfData.points : 0,
-            penalty: cfData ? cfData.penalty : 0,
+            penalty: itemPenalty,
           });
 
           traineeTotals.set(trainee.handle, currentTotal);
         }
       } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        console.error(`Failed to fetch overall standings: ${error.message}`);
+        throw error;
+        //res.status(500).json({ success: false, error: error.message });
       }
     }
     

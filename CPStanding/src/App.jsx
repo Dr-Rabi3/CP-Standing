@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Header from './components/Header';
 import TopStanding from './components/TopStanding';
 import Standing from './components/Standing';
 import Footer from './components/Footer';
 import { standingsApi, trainingApi } from './api/api';
-import { Clock, Code } from 'lucide-react';
+import { Clock, Code, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 import { createBrowserRouter, RouterProvider, useParams, useNavigate } from 'react-router-dom';
 
 
@@ -79,27 +80,66 @@ function App() {
     fetchTrainingData();
   }, []);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
+  };
+
   return (
     <>
-      <div className='w-[95%] mx-auto space-y-[50px] mt-[50px] min-h-screen'>
+      <div className='w-[95%] mx-auto space-y-8 sm:space-y-12 mt-8 sm:mt-12 min-h-screen'>
         {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="text-white text-xl">Loading standings...</div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex justify-center items-center h-64"
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              className="flex flex-col items-center gap-4"
+            >
+              <Loader2 className="w-12 h-12 text-white" />
+              <p className="text-white text-xl font-medium">Loading standings...</p>
+            </motion.div>
+          </motion.div>
         ) : error ? (
-          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-500/20 backdrop-blur-md border-l-4 border-red-500 text-white p-6 rounded-xl flex items-center gap-4"
+            role="alert"
+          >
+            <AlertCircle className="w-6 h-6 text-red-400 flex-shrink-0" />
             <p>{error}</p>
-          </div>
+          </motion.div>
         ) : (
           <>
-            <div>
-              <div className="flex justify-center items-end gap-2 md:gap-4">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="flex justify-center items-end gap-2 sm:gap-4 md:gap-6 flex-wrap">
                 {trainingData.topContestants.map((contestant) => (
                   <TopStanding 
                     key={contestant.id || contestant.handle} 
                     contestant={{
                       ...contestant,
-                      // Ensure all required fields are present
                       rank: contestant.rank || 0,
                       solved: contestant.solved || 0,
                       points: contestant.points || 0
@@ -108,44 +148,101 @@ function App() {
                   />
                 ))}
               </div>
-              <div className="max-w-[1000px] mx-auto h-[5px] bg-[#fff] rounded-full" />
-            </div>
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+                className="max-w-[1000px] mx-auto h-1 sm:h-1.5 bg-gradient-to-r from-transparent via-white to-transparent rounded-full mt-6 sm:mt-8"
+              />
+            </motion.div>
             <Standing trainingStandings={trainingData.standings} />
           </>
         )}
 
-        <div className="mb-8 space-y-[20px]">
-          <h1 className="font-[Audiowide] text-[#fff] text-[25px] sm:w-[50%]">Sheets & Contests</h1>
-          <div className="grid grid-cols-1 gap-6">
-            {trainingData.trainingSheets && trainingData.trainingSheets
-              .map((item) => (
-                <div 
+        {/* Sheets & Contests Section */}
+        {trainingData.trainingSheets && trainingData.trainingSheets.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mb-8 sm:mb-12 space-y-6 sm:space-y-8"
+          >
+            <motion.h1
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+              className="font-[Audiowide] text-white text-2xl sm:text-3xl md:text-4xl font-bold"
+            >
+              Sheets & Contests
+            </motion.h1>
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+            >
+              {trainingData.trainingSheets.map((item, index) => (
+                <motion.div
                   key={item._id}
+                  variants={itemVariants}
+                  whileHover={{ scale: 1.03, y: -5 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => navigate(`/${trainingId}/training/${item._id}`, { state: { type: item.type } })}
-                  className="bg-white rounded-[20px] shadow-lg transition-all cursor-pointer p-6 border-l-[10px] border-[#1D4ED8]"
+                  className="bg-white/10 backdrop-blur-md rounded-2xl shadow-xl transition-all cursor-pointer p-5 sm:p-6 border-2 border-white/20 hover:border-purple-400/50 group relative overflow-hidden"
                 >
-                  <div className="flex justify-between items-start mb-5">
-                    <h3 className="text-[22px] font-bold font-[Archivo]">{item.title}</h3>
+                  {/* Background gradient on hover */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  />
+                  
+                  <div className="relative z-10">
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold font-[Archivo] text-white group-hover:text-purple-200 transition-colors">
+                        {item.title}
+                      </h3>
+                      <motion.div
+                        whileHover={{ rotate: 45 }}
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0"
+                      >
+                        <span className="text-white text-xs sm:text-sm font-bold">
+                          {item.type === 'contest' ? 'C' : 'S'}
+                        </span>
+                      </motion.div>
+                    </div>
+                    
+                    <div className="space-y-2 sm:space-y-3 mb-4">
+                      <p className="flex items-center gap-2 text-sm sm:text-base text-white/90">
+                        <Code className="w-4 h-4 sm:w-5 sm:h-5 text-purple-300" />
+                        <span className="font-medium">{item.problems?.length || 0} Problems</span>
+                      </p>
+                      <p className="flex items-center gap-2 text-sm sm:text-base text-white/90">
+                        <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-purple-300" />
+                        <span className="font-medium">{item.duration || 'N/A'} Duration</span>
+                      </p>
+                    </div>
+                    
+                    <div className="flex justify-between items-center mt-4 pt-4 border-t border-white/20">
+                      <span className="text-xs sm:text-sm text-white/70">
+                        {new Date(item.addedAt).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </span>
+                      <motion.div
+                        whileHover={{ x: 5 }}
+                        className="flex items-center gap-1 text-purple-300 group-hover:text-purple-200 transition-colors"
+                      >
+                        <span className="text-xs sm:text-sm font-semibold">View</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </motion.div>
+                    </div>
                   </div>
-                  <p className="flex items-center gap-2 text-[15px] mb-2">
-                    <Code className="w-4 h-4" />
-                    {item.problems.length} Problems
-                  </p>
-                  <p className="flex items-center gap-2 text-[15px]">
-                    <Clock className="w-4 h-4" />
-                    {item.duration} Duration
-                  </p>
-                  <div className="flex justify-end">
-                    {new Date(item.addedAt).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}
-                  </div>
-                </div>
+                </motion.div>
               ))}
-          </div>
-        </div>
-
-
-
-
+            </motion.div>
+          </motion.div>
+        )}
       </div>
     </>
   )

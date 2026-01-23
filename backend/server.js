@@ -16,7 +16,7 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: "https://competitive-programming-standing.vercel.app",
+    origin: ["https://competitive-programming-standing.vercel.app", "http://localhost:5173"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })

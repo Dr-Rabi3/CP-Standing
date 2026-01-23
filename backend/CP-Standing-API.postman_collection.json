@@ -1,0 +1,1490 @@
+{
+	"info": {
+		"_postman_id": "cp-standing-api",
+		"name": "CP Standing API",
+		"description": "Complete API collection for Competitive Programming Standing System",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/health",
+							"host": ["{{base_url}}"],
+							"path": ["api", "health"]
+						},
+						"description": "## Overview\n\nCheck if the server is running and healthy.\n\n## Returns\n\n- Simple status message\n- Server health status\n\n## Usage\n\nUse this endpoint to verify your server connection before making other API calls."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Trainings",
+			"item": [
+				{
+					"name": "Create Training",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Summer Training 2024\",\n  \"level\": \"Intermediate\",\n  \"type\": \"training\",\n  \"startDate\": \"2024-06-01T00:00:00.000Z\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainings"]
+						},
+						"description": "## Overview\n\nCreate a new training session.\n\n## Required Fields\n\n- `title` (string) - Training title\n- `level` (enum) - One of: `Beginner`, `Intermediate`, `Advanced`\n- `startDate` (ISO date string) - Start date in ISO format\n\n## Optional Fields\n\n- `type` (enum) - Either `training` or `camp` (defaults to `training`)\n  - **Note:** Camp type uses different penalty calculation\n\n## Returns\n\n- Created training object with populated `sheets`, `contests`, and `trainees` arrays"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Trainings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainings"]
+						},
+						"description": "## Overview\n\nRetrieve all training sessions.\n\n## Returns\n\n- Array of all trainings\n- Sorted by `startDate` (newest first)\n- Each training includes populated:\n  - `sheets`\n  - `contests`\n  - `trainees`\n\n## Usage\n\nUse this to get a list of all available trainings."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Training by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainings/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainings", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINING_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nGet a specific training by its MongoDB ObjectID.\n\n## Parameters\n\n- `:id` - Training ID (replace with actual MongoDB ObjectID)\n\n## Returns\n\n- Training object with all populated relationships:\n  - `sheets`\n  - `contests`\n  - `trainees`\n- **404** if training not found"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trainings by Level",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainings/level/:level",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainings", "level", ":level"],
+							"variable": [
+								{
+									"key": "level",
+									"value": "Beginner",
+									"description": "Options: Beginner, Intermediate, Advanced"
+								}
+							]
+						},
+						"description": "## Overview\n\nFilter trainings by difficulty level.\n\n## Parameters\n\n- `:level` - One of:\n  - `Beginner`\n  - `Intermediate`\n  - `Advanced`\n\n## Returns\n\n- All trainings matching the specified level\n- Sorted by `startDate` (newest first)\n\n## Usage\n\nUseful for filtering trainings by difficulty."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Training",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Training Title\",\n  \"level\": \"Advanced\",\n  \"type\": \"camp\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainings/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainings", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINING_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nUpdate an existing training.\n\n## Parameters\n\n- `:id` - Training ID\n\n## Request Body\n\nSend only the fields you want to update (all optional):\n\n- `title` (string)\n- `level` (enum)\n- `type` (enum)\n- `startDate` (ISO date string)\n\n## Important Notes\n\n- Changing `type` from `training` to `camp` will affect penalty calculations\n- Only send fields you want to update\n\n## Returns\n\n- Updated training object"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Training",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainings/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainings", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINING_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nPermanently delete a training session.\n\n## Parameters\n\n- `:id` - Training ID\n\n## Warning\n\n⚠️ **This action cannot be undone.**\n\n## Returns\n\n- Success message if deleted\n- **404** if training not found\n\n## Note\n\nThis does **not** delete associated:\n- Sheets\n- Contests\n- Trainees\n\nOnly removes the training record."
+					},
+					"response": []
+				},
+				{
+					"name": "Add Sheet to Training",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sheetId\": \"SHEET_ID_HERE\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainings/:id/sheets",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainings", ":id", "sheets"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINING_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nAdd an existing sheet to a training session.\n\n## Parameters\n\n- `:id` - Training ID\n\n## Request Body\n\n```json\n{\n  \"sheetId\": \"SHEET_ID_HERE\"\n}\n```\n\n## Requirements\n\n- Sheet must exist in the database\n- If sheet is already added, it won't be duplicated\n\n## Returns\n\n- Updated training with populated `sheets` array"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Sheet in Training",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainings/:id/sheets/:sheetId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainings", ":id", "sheets", ":sheetId"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINING_ID_HERE"
+								},
+								{
+									"key": "sheetId",
+									"value": "SHEET_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nGet details of a specific sheet within a training.\n\n## Parameters\n\n- `:id` - Training ID\n- `:sheetId` - Sheet ID\n\n## Returns\n\n- Sheet object if it exists in the training\n- **404** if:\n  - Training not found\n  - Sheet not found\n  - Sheet is not part of this training"
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Sheet from Training",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainings/:id/sheets/:sheetId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainings", ":id", "sheets", ":sheetId"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINING_ID_HERE"
+								},
+								{
+									"key": "sheetId",
+									"value": "SHEET_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nRemove a sheet from a training session.\n\n## Parameters\n\n- `:id` - Training ID\n- `:sheetId` - Sheet ID\n\n## Note\n\nThis only removes the **association** - the sheet itself is **not** deleted.\n\n## Returns\n\n- Updated training object with remaining sheets"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Contest to Training",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contestId\": \"CONTEST_ID_HERE\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainings/:id/contests",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainings", ":id", "contests"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINING_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nAdd an existing contest to a training session.\n\n## Parameters\n\n- `:id` - Training ID\n\n## Request Body\n\n```json\n{\n  \"contestId\": \"CONTEST_ID_HERE\"\n}\n```\n\n## Requirements\n\n- Contest must exist in the database\n- If already added, it won't be duplicated\n\n## Returns\n\n- Updated training with populated `contests` array"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Contest in Training",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainings/:id/contests/:contestId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainings", ":id", "contests", ":contestId"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINING_ID_HERE"
+								},
+								{
+									"key": "contestId",
+									"value": "CONTEST_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nGet details of a specific contest within a training.\n\n## Parameters\n\n- `:id` - Training ID\n- `:contestId` - Contest ID\n\n## Returns\n\n- Contest object if it exists in the training\n- **404** if:\n  - Training not found\n  - Contest not found\n  - Contest is not part of this training"
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Contest from Training",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainings/:id/contests/:contestId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainings", ":id", "contests", ":contestId"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINING_ID_HERE"
+								},
+								{
+									"key": "contestId",
+									"value": "CONTEST_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nRemove a contest from a training session.\n\n## Parameters\n\n- `:id` - Training ID\n- `:contestId` - Contest ID\n\n## Note\n\nThis only removes the **association** - the contest itself is **not** deleted.\n\n## Returns\n\n- Updated training object with remaining contests"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Trainee to Training",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"traineeId\": \"TRAINEE_ID_HERE\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainings/:id/trainees",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainings", ":id", "trainees"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINING_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nAdd a single trainee to a training session.\n\n## Parameters\n\n- `:id` - Training ID\n\n## Request Body\n\n```json\n{\n  \"traineeId\": \"TRAINEE_ID_HERE\"\n}\n```\n\n## Requirements\n\n- Trainee must exist in the database\n- If already added, it won't be duplicated\n\n## Returns\n\n- Updated training with populated `trainees` array"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Multiple Trainees to Training",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"traineeIds\": [\n    \"TRAINEE_ID_1\",\n    \"TRAINEE_ID_2\",\n    \"TRAINEE_ID_3\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainings/:id/trainees/bulk",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainings", ":id", "trainees", "bulk"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINING_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nAdd multiple trainees to a training session at once.\n\n## Parameters\n\n- `:id` - Training ID\n\n## Request Body\n\n```json\n{\n  \"traineeIds\": [\n    \"TRAINEE_ID_1\",\n    \"TRAINEE_ID_2\",\n    \"TRAINEE_ID_3\"\n  ]\n}\n```\n\n## Requirements\n\n- All trainee IDs must exist in the database\n\n## Returns\n\n- Detailed results showing:\n  - Which trainees were added\n  - Which already existed\n\n## Benefits\n\n✅ More efficient than adding trainees one by one"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Trainees by Handles to Training",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"handles\": [\n    \"handle1\",\n    \"handle2\",\n    \"handle3\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainings/:id/trainees/by-handles",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainings", ":id", "trainees", "by-handles"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINING_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nAdd trainees to a training using their Codeforces handles instead of IDs.\n\n## Parameters\n\n- `:id` - Training ID\n\n## Request Body\n\n```json\n{\n  \"handles\": [\n    \"handle1\",\n    \"handle2\",\n    \"handle3\"\n  ]\n}\n```\n\n## Requirements\n\n- Trainees must exist in the database with matching handles\n\n## Returns\n\n- Results showing:\n  - Added trainees\n  - Already existing ones\n  - Handles not found\n\n## Usage\n\nUseful when you know handles but not IDs."
+					},
+					"response": []
+				},
+				{
+					"name": "Add Trainees by Coach to Training",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"coach\": \"Coach Name\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainings/:id/trainees/by-coach",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainings", ":id", "trainees", "by-coach"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINING_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nAdd all trainees belonging to a specific coach to a training session.\n\n## Parameters\n\n- `:id` - Training ID\n\n## Request Body\n\n```json\n{\n  \"coach\": \"Coach Name\"\n}\n```\n\n## How It Works\n\n- Finds all trainees with matching `coach` field\n- Adds them to the training\n\n## Returns\n\n- Results showing:\n  - How many were added\n  - How many already existed\n\n## Usage\n\nUseful for adding entire groups at once."
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Trainee from Training",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainings/:id/trainees/:traineeId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainings", ":id", "trainees", ":traineeId"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINING_ID_HERE"
+								},
+								{
+									"key": "traineeId",
+									"value": "TRAINEE_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nRemove a trainee from a training session.\n\n## Parameters\n\n- `:id` - Training ID\n- `:traineeId` - Trainee ID\n\n## Note\n\nThis only removes the **association** - the trainee itself is **not** deleted.\n\n## Returns\n\n- Updated training object with remaining trainees"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Trainees",
+			"item": [
+				{
+					"name": "Create Trainee",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"handle\": \"johndoe\",\n  \"titlePhoto\": \"https://example.com/photo.jpg\",\n  \"coach\": \"Coach Name\",\n  \"rating\": 1500\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainees",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainees"]
+						},
+						"description": "## Overview\n\nCreate a new trainee record.\n\n## Required Fields\n\n- `name` (string) - Trainee name\n- `handle` (string) - Codeforces handle (must be unique)\n- `titlePhoto` (string) - URL to title photo\n\n## Optional Fields\n\n- `coach` (string) - Coach name\n- `rating` (number) - Codeforces rating (defaults to 0)\n- `color` (string) - Auto-calculated from rating\n\n## Important\n\n⚠️ The `handle` must be **unique** - duplicate handles will cause an error.\n\n## Returns\n\n- Created trainee object"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Trainees",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainees",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainees"]
+						},
+						"description": "## Overview\n\nRetrieve all trainees in the system.\n\n## Returns\n\n- Array of all trainee records with:\n  - Name\n  - Handle\n  - Rating\n  - Coach\n  - Performance data\n\n## Usage\n\nUse this to get a complete list of all registered trainees."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trainee by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainees/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainees", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINEE_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nGet a specific trainee by their MongoDB ObjectID.\n\n## Parameters\n\n- `:id` - Trainee ID (replace with actual MongoDB ObjectID)\n\n## Returns\n\n- Complete trainee object including:\n  - All performance records\n  - Personal details\n- **404** if trainee not found"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trainee by Handle",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainees/handle/:handle",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainees", "handle", ":handle"],
+							"variable": [
+								{
+									"key": "handle",
+									"value": "johndoe"
+								}
+							]
+						},
+						"description": "## Overview\n\nGet a trainee by their Codeforces handle.\n\n## Parameters\n\n- `:handle` - Trainee's Codeforces handle (case-insensitive)\n\n## Returns\n\n- Trainee object\n- **404** if not found\n\n## Usage\n\nUseful when you know the handle but not the ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trainees by Coach",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainees/coach/:coach",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainees", "coach", ":coach"],
+							"variable": [
+								{
+									"key": "coach",
+									"value": "Coach Name"
+								}
+							]
+						},
+						"description": "## Overview\n\nGet all trainees assigned to a specific coach.\n\n## Parameters\n\n- `:coach` - Coach name\n\n## Returns\n\n- Array of all trainees with matching `coach` field\n\n## Usage\n\nUseful for filtering trainees by their coach."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Trainee",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Name\",\n  \"rating\": 1600,\n  \"coach\": \"New Coach\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainees/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainees", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINEE_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nUpdate an existing trainee's information.\n\n## Parameters\n\n- `:id` - Trainee ID\n\n## Request Body\n\nSend only the fields you want to update (all optional):\n\n- `name` (string)\n- `handle` (string)\n- `titlePhoto` (string)\n- `coach` (string)\n- `rating` (number)\n\n## Auto-Update\n\n- Updating `rating` will automatically update the `color` field\n\n## Returns\n\n- Updated trainee object"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Trainee",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainees/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainees", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINEE_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nPermanently delete a trainee record.\n\n## Parameters\n\n- `:id` - Trainee ID\n\n## Warning\n\n⚠️ **This action cannot be undone** and will remove:\n- All associated performance data\n- All training associations\n\n## Returns\n\n- Success message if deleted\n- **404** if trainee not found"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Performance to Trainee",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"itemId\": \"SHEET_OR_CONTEST_ID\",\n  \"itemType\": \"Sheet\",\n  \"problemsSolved\": 5,\n  \"points\": 80\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainees/:id/performances",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainees", ":id", "performances"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINEE_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nAdd a performance record for a trainee.\n\n## Parameters\n\n- `:id` - Trainee ID\n\n## Request Body\n\n```json\n{\n  \"itemId\": \"SHEET_OR_CONTEST_ID\",\n  \"itemType\": \"Sheet\",\n  \"problemsSolved\": 5,\n  \"points\": 80\n}\n```\n\n## Required Fields\n\n- `itemId` - Sheet or Contest ID\n- `itemType` - Either `Sheet` or `Contest`\n- `problemsSolved` (number) - Number of problems solved\n- `points` (number) - Points earned\n\n## Purpose\n\nTracks how many problems the trainee solved and points earned in a specific sheet or contest."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Trainee Performance",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"problemsSolved\": 7,\n  \"points\": 90\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainees/:id/performances/:performanceId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainees", ":id", "performances", ":performanceId"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINEE_ID_HERE"
+								},
+								{
+									"key": "performanceId",
+									"value": "PERFORMANCE_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nUpdate an existing performance record.\n\n## Parameters\n\n- `:id` - Trainee ID\n- `:performanceId` - Performance record ID\n\n## Request Body\n\nSend only fields to update:\n\n```json\n{\n  \"problemsSolved\": 7,\n  \"points\": 90\n}\n```\n\n## Returns\n\n- Updated performance record"
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Import Trainees",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"handles\": [\n    \"handle1\",\n    \"handle2\",\n    \"handle3\"\n  ],\n  \"coach\": \"Optional Coach Name\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainees/bulk-import",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainees", "bulk-import"]
+						},
+						"description": "## Overview\n\nImport multiple trainees from Codeforces handles.\n\n## Request Body\n\n```json\n{\n  \"handles\": [\n    \"handle1\",\n    \"handle2\",\n    \"handle3\"\n  ],\n  \"coach\": \"Optional Coach Name\"\n}\n```\n\n## How It Works\n\nThe system:\n1. Fetches trainee data from Codeforces API:\n   - Name\n   - Rating\n   - Title photo\n2. Creates trainee records\n\n## Returns\n\n- Results showing:\n  - Successfully imported trainees\n  - Any errors\n\n## Requirements\n\n- Handles must be valid Codeforces handles"
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Sync All Trainees",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainees/bulk-sync",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainees", "bulk-sync"]
+						},
+						"description": "## Overview\n\nSync all trainees' data from Codeforces.\n\n## What It Updates\n\n- Rating\n- Color\n- Other Codeforces-related fields\n\n## Performance\n\n⏱️ This may take a while if you have many trainees.\n\n## Returns\n\n- Summary of sync results\n\n## Usage\n\nUseful for keeping trainee ratings up-to-date."
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Sync Trainees by Coach",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainees/bulk-sync/coach/:coach",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainees", "bulk-sync", "coach", ":coach"],
+							"variable": [
+								{
+									"key": "coach",
+									"value": "Coach Name"
+								}
+							]
+						},
+						"description": "## Overview\n\nSync trainee data from Codeforces for all trainees belonging to a specific coach.\n\n## Parameters\n\n- `:coach` - Coach name\n\n## What It Updates\n\n- Rating\n- Color\n\n## Benefits\n\n✅ More efficient than syncing all trainees when you only need to update a specific group."
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Sync Trainees in Training",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainees/bulk-sync/training/:trainingId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainees", "bulk-sync", "training", ":trainingId"],
+							"variable": [
+								{
+									"key": "trainingId",
+									"value": "TRAINING_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nSync trainee data from Codeforces for all trainees enrolled in a specific training.\n\n## Parameters\n\n- `:trainingId` - Training ID\n\n## What It Updates\n\n- Rating\n- Color\n\n## Usage\n\nUseful for keeping training participant data current."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Contests",
+			"item": [
+				{
+					"name": "Create Contest",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Weekly Contest 1\",\n  \"duration\": 120,\n  \"cfContestId\": \"1234\",\n  \"problems\": [\n    {\n      \"name\": \"1234A\",\n      \"alpha\": \"A\"\n    },\n    {\n      \"name\": \"1234B\",\n      \"alpha\": \"B\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/contests",
+							"host": ["{{base_url}}"],
+							"path": ["api", "contests"]
+						},
+						"description": "## Overview\n\nCreate a new contest record.\n\n## Required Fields\n\n- `title` (string) - Contest title\n- `duration` (number) - Duration in minutes\n\n## Optional Fields\n\n- `cfContestId` (string) - Codeforces contest ID\n- `problems` (array) - Array of problem objects:\n  ```json\n  {\n    \"name\": \"1234A\",\n    \"alpha\": \"A\"\n  }\n  ```\n\n## Note\n\nProblems can be added later.\n\n## Returns\n\n- Created contest object"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Contests",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/contests",
+							"host": ["{{base_url}}"],
+							"path": ["api", "contests"]
+						},
+						"description": "## Overview\n\nRetrieve all contests in the system.\n\n## Returns\n\n- Array of all contest records with their problems\n\n## Usage\n\nUse this to get a complete list of available contests."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Contest by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/contests/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "contests", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "CONTEST_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nGet a specific contest by its MongoDB ObjectID.\n\n## Parameters\n\n- `:id` - Contest ID (replace with actual MongoDB ObjectID)\n\n## Returns\n\n- Contest object with all problems\n- **404** if contest not found"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Contest",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Contest Title\",\n  \"duration\": 150\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/contests/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "contests", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "CONTEST_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nUpdate an existing contest.\n\n## Parameters\n\n- `:id` - Contest ID\n\n## Request Body\n\nSend only the fields you want to update (all optional):\n\n- `title` (string)\n- `duration` (number)\n- `cfContestId` (string)\n\n## Note\n\nProblems should be managed separately.\n\n## Returns\n\n- Updated contest object"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Contest",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/contests/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "contests", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "CONTEST_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nPermanently delete a contest.\n\n## Parameters\n\n- `:id` - Contest ID\n\n## Warning\n\n⚠️ **This action cannot be undone.**\n\n## Returns\n\n- Success message if deleted\n- **404** if contest not found\n\n## Note\n\nRemoving contest from trainings does **not** delete the contest itself."
+					},
+					"response": []
+				},
+				{
+					"name": "Add Problem to Contest",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"1234C\",\n  \"alpha\": \"C\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/contests/:id/problems",
+							"host": ["{{base_url}}"],
+							"path": ["api", "contests", ":id", "problems"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "CONTEST_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nAdd a problem to an existing contest.\n\n## Parameters\n\n- `:id` - Contest ID\n\n## Request Body\n\n```json\n{\n  \"name\": \"1234C\",\n  \"alpha\": \"C\"\n}\n```\n\n## Required Fields\n\n- `name` (string) - Problem name, e.g., `1234C`\n- `alpha` (string) - Problem index, e.g., `C`\n\n## Returns\n\n- Updated contest with the new problem added"
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Problem from Contest",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/contests/:id/problems/:problemId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "contests", ":id", "problems", ":problemId"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "CONTEST_ID_HERE"
+								},
+								{
+									"key": "problemId",
+									"value": "PROBLEM_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nRemove a problem from a contest.\n\n## Parameters\n\n- `:id` - Contest ID\n- `:problemId` - Problem's MongoDB ObjectID (found in the problems array)\n\n## Returns\n\n- Updated contest without the removed problem"
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Import Contests",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contestIds\": [\"1234\", \"5678\", \"9012\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/contests/bulk-import",
+							"host": ["{{base_url}}"],
+							"path": ["api", "contests", "bulk-import"]
+						},
+						"description": "## Overview\n\nImport multiple contests from Codeforces.\n\n## Request Body\n\n```json\n{\n  \"contestIds\": [\"1234\", \"5678\", \"9012\"]\n}\n```\n\n## How It Works\n\nThe system:\n1. Fetches contest data and problems from Codeforces API\n2. Creates contest records\n\n## Returns\n\n- Results showing:\n  - Successfully imported contests\n  - Any errors\n\n## Requirements\n\n- Contest IDs must be valid Codeforces contest IDs (as strings)"
+					},
+					"response": []
+				},
+				{
+					"name": "Preview Contests",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contestIds\": [\"1234\", \"5678\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/contests/preview",
+							"host": ["{{base_url}}"],
+							"path": ["api", "contests", "preview"]
+						},
+						"description": "## Overview\n\nPreview contest data from Codeforces before importing.\n\n## Request Body\n\n```json\n{\n  \"contestIds\": [\"1234\", \"5678\"]\n}\n```\n\n## Returns\n\n- Contest information without creating records:\n  - Title\n  - Problems\n  - Duration\n\n## Usage\n\nUse this to verify contest data before bulk importing."
+					},
+					"response": []
+				},
+				{
+					"name": "Import Single Contest",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contestId\": \"1234\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/contests/import-single",
+							"host": ["{{base_url}}"],
+							"path": ["api", "contests", "import-single"]
+						},
+						"description": "## Overview\n\nImport a single contest from Codeforces.\n\n## Request Body\n\n```json\n{\n  \"contestId\": \"1234\"\n}\n```\n\n## How It Works\n\n1. Fetches contest data and problems\n2. Creates a contest record\n\n## Returns\n\n- Created contest object\n\n## Usage\n\nUseful for importing one contest at a time."
+					},
+					"response": []
+				},
+				{
+					"name": "Sync Contest Problems",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/contests/sync/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "contests", "sync", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "CONTEST_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nSync contest problems from Codeforces.\n\n## Parameters\n\n- `:id` - Contest ID\n\n## Requirements\n\n- Contest must have a valid `cfContestId`\n\n## How It Works\n\n1. Fetches current problems from Codeforces\n2. Updates the contest's problems list\n\n## Usage\n\nUseful for keeping contest problems up-to-date."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Sheets",
+			"item": [
+				{
+					"name": "Create Sheet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Sheet 1 - Arrays\",\n  \"duration\": 60,\n  \"cfContestId\": \"1234\",\n  \"problems\": [\n    {\n      \"name\": \"1234A\",\n      \"alpha\": \"A\"\n    },\n    {\n      \"name\": \"1234B\",\n      \"alpha\": \"B\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/sheets",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sheets"]
+						},
+						"description": "## Overview\n\nCreate a new sheet (practice problem set).\n\n## Required Fields\n\n- `title` (string) - Sheet title\n- `duration` (number) - Duration in minutes\n\n## Optional Fields\n\n- `cfContestId` (string) - Codeforces contest ID\n- `problems` (array) - Array of problem objects:\n  ```json\n  {\n    \"name\": \"1234A\",\n    \"alpha\": \"A\"\n  }\n  ```\n\n## Note\n\n- Sheets are similar to contests but used for **practice**\n- Problems can be added later\n\n## Returns\n\n- Created sheet object"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Sheets",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sheets",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sheets"]
+						},
+						"description": "## Overview\n\nRetrieve all sheets in the system.\n\n## Returns\n\n- Array of all sheet records with their problems\n\n## Usage\n\nUse this to get a complete list of available practice sheets."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Sheet by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sheets/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sheets", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "SHEET_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nGet a specific sheet by its MongoDB ObjectID.\n\n## Parameters\n\n- `:id` - Sheet ID (replace with actual MongoDB ObjectID)\n\n## Returns\n\n- Sheet object with all problems\n- **404** if sheet not found"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Sheet",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Sheet Title\",\n  \"duration\": 90\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/sheets/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sheets", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "SHEET_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nUpdate an existing sheet.\n\n## Parameters\n\n- `:id` - Sheet ID\n\n## Request Body\n\nSend only the fields you want to update (all optional):\n\n- `title` (string)\n- `duration` (number)\n- `cfContestId` (string)\n\n## Note\n\nProblems should be managed separately.\n\n## Returns\n\n- Updated sheet object"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Sheet",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sheets/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sheets", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "SHEET_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nPermanently delete a sheet.\n\n## Parameters\n\n- `:id` - Sheet ID\n\n## Warning\n\n⚠️ **This action cannot be undone.**\n\n## Returns\n\n- Success message if deleted\n- **404** if sheet not found\n\n## Note\n\nRemoving sheet from trainings does **not** delete the sheet itself."
+					},
+					"response": []
+				},
+				{
+					"name": "Add Problem to Sheet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"1234C\",\n  \"alpha\": \"C\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/sheets/:id/problems",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sheets", ":id", "problems"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "SHEET_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nAdd a problem to an existing sheet.\n\n## Parameters\n\n- `:id` - Sheet ID\n\n## Request Body\n\n```json\n{\n  \"name\": \"1234C\",\n  \"alpha\": \"C\"\n}\n```\n\n## Required Fields\n\n- `name` (string) - Problem name, e.g., `1234C`\n- `alpha` (string) - Problem index, e.g., `C`\n\n## Returns\n\n- Updated sheet with the new problem added"
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Problem from Sheet",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sheets/:id/problems/:problemId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sheets", ":id", "problems", ":problemId"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "SHEET_ID_HERE"
+								},
+								{
+									"key": "problemId",
+									"value": "PROBLEM_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nRemove a problem from a sheet.\n\n## Parameters\n\n- `:id` - Sheet ID\n- `:problemId` - Problem's MongoDB ObjectID (found in the problems array)\n\n## Returns\n\n- Updated sheet without the removed problem"
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Import Contests as Sheets",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contestIds\": [\"1234\", \"5678\", \"9012\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/sheets/bulk-import",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sheets", "bulk-import"]
+						},
+						"description": "## Overview\n\nImport multiple Codeforces contests as sheets (practice problem sets).\n\n## Request Body\n\n```json\n{\n  \"contestIds\": [\"1234\", \"5678\", \"9012\"]\n}\n```\n\n## How It Works\n\n- Creates **sheet records** instead of contest records\n- Useful for converting contests into practice sheets\n\n## Returns\n\n- Results showing successfully imported sheets"
+					},
+					"response": []
+				},
+				{
+					"name": "Preview Contests (for Sheets)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contestIds\": [\"1234\", \"5678\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/sheets/preview",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sheets", "preview"]
+						},
+						"description": "## Overview\n\nPreview contest data from Codeforces before importing as sheets.\n\n## Request Body\n\n```json\n{\n  \"contestIds\": [\"1234\", \"5678\"]\n}\n```\n\n## Returns\n\n- Contest information without creating records\n\n## Usage\n\nUse this to verify data before bulk importing as sheets."
+					},
+					"response": []
+				},
+				{
+					"name": "Sync Sheet Problems",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sheets/sync/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sheets", "sync", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "SHEET_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nSync sheet problems from Codeforces.\n\n## Parameters\n\n- `:id` - Sheet ID\n\n## Requirements\n\n- Sheet must have a valid `cfContestId`\n\n## How It Works\n\n1. Fetches current problems from Codeforces\n2. Updates the sheet's problems list\n\n## Usage\n\nUseful for keeping sheet problems up-to-date."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Standings",
+			"item": [
+				{
+					"name": "Get Overall Training Standings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/standings/trainings/:trainingId/overall",
+							"host": ["{{base_url}}"],
+							"path": ["api", "standings", "trainings", ":trainingId", "overall"],
+							"variable": [
+								{
+									"key": "trainingId",
+									"value": "TRAINING_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nGet overall standings for a training session.\n\n## Parameters\n\n- `:trainingId` - Training ID\n\n## Returns\n\nStandings aggregated across all sheets and contests in the training:\n\n- Total solved problems\n- Points\n- Penalties\n\n## Sorting\n\nStandings are sorted by:\n1. Solved count (descending)\n2. Penalty (ascending)\n\n## Important Notes\n\n- For **camp type** trainings, penalties use camp calculation\n- Data is cached for performance"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Overall Training Standings (Filtered)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/standings/trainings/:trainingId/overall/filtered?coach=CoachName&minRating=1400&maxRating=2000",
+							"host": ["{{base_url}}"],
+							"path": ["api", "standings", "trainings", ":trainingId", "overall", "filtered"],
+							"query": [
+								{
+									"key": "coach",
+									"value": "CoachName",
+									"description": "Filter by coach name"
+								},
+								{
+									"key": "minRating",
+									"value": "1400",
+									"description": "Minimum rating filter"
+								},
+								{
+									"key": "maxRating",
+									"value": "2000",
+									"description": "Maximum rating filter"
+								}
+							],
+							"variable": [
+								{
+									"key": "trainingId",
+									"value": "TRAINING_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nGet filtered overall standings for a training.\n\n## Parameters\n\n- `:trainingId` - Training ID\n\n## Query Parameters (All Optional)\n\n- `coach` - Filter by coach name\n- `minRating` - Minimum rating filter\n- `maxRating` - Maximum rating filter\n\n## Returns\n\n- Standings only for trainees matching the filters\n\n## Usage\n\nUseful for viewing standings for specific groups or rating ranges."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Training Standings Summary",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/standings/trainings/:trainingId/summary",
+							"host": ["{{base_url}}"],
+							"path": ["api", "standings", "trainings", ":trainingId", "summary"],
+							"variable": [
+								{
+									"key": "trainingId",
+									"value": "TRAINING_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nGet a summary of training standings (statistics only, no detailed breakdown).\n\n## Parameters\n\n- `:trainingId` - Training ID\n\n## Returns\n\nFor each trainee:\n\n- Total solved problems\n- Total points\n- Percentage\n\n**Note:** No per-item details included\n\n## Benefits\n\n✅ Faster than full standings when you only need summary statistics"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Sheet Standings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/standings/trainings/:trainingId/sheets/:sheetId/standings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "standings", "trainings", ":trainingId", "sheets", ":sheetId", "standings"],
+							"variable": [
+								{
+									"key": "trainingId",
+									"value": "TRAINING_ID_HERE"
+								},
+								{
+									"key": "sheetId",
+									"value": "SHEET_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nGet standings for a specific sheet within a training.\n\n## Parameters\n\n- `:trainingId` - Training ID\n- `:sheetId` - Sheet ID\n\n## Returns\n\nStandings showing for each trainee:\n\n- Problems solved\n- Rank\n- Points\n- Penalty\n\n## Data Source\n\n- Standings are fetched from Codeforces if the sheet has a `cfContestId`\n- Data is cached for performance"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Contest Standings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/standings/trainings/:trainingId/contests/:contestId/standings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "standings", "trainings", ":trainingId", "contests", ":contestId", "standings"],
+							"variable": [
+								{
+									"key": "trainingId",
+									"value": "TRAINING_ID_HERE"
+								},
+								{
+									"key": "contestId",
+									"value": "CONTEST_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nGet standings for a specific contest within a training.\n\n## Parameters\n\n- `:trainingId` - Training ID\n- `:contestId` - Contest ID\n\n## Returns\n\nStandings showing for each trainee:\n\n- Rank\n- Solved problems\n- Points\n- Penalty\n\n## Data Source\n\n- Standings are fetched from Codeforces if the contest has a `cfContestId`\n- Data is cached for performance\n\n## Important Notes\n\n- For **camp type** trainings, penalties use camp calculation"
+					},
+					"response": []
+				},
+				{
+					"name": "Sync Trainee from Codeforces",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/standings/trainees/:id/sync",
+							"host": ["{{base_url}}"],
+							"path": ["api", "standings", "trainees", ":id", "sync"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "TRAINEE_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nSync a trainee's data from Codeforces.\n\n## Parameters\n\n- `:id` - Trainee ID\n\n## What It Updates\n\n- Rating\n- Color\n- Other Codeforces-related fields\n\n## Usage\n\nUseful for keeping individual trainee data current without syncing all trainees."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Sheet Performance",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/standings/trainings/:trainingId/sheets/:sheetId/trainees/:traineeId/update",
+							"host": ["{{base_url}}"],
+							"path": ["api", "standings", "trainings", ":trainingId", "sheets", ":sheetId", "trainees", ":traineeId", "update"],
+							"variable": [
+								{
+									"key": "trainingId",
+									"value": "TRAINING_ID_HERE"
+								},
+								{
+									"key": "sheetId",
+									"value": "SHEET_ID_HERE"
+								},
+								{
+									"key": "traineeId",
+									"value": "TRAINEE_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nManually update a trainee's performance for a specific sheet.\n\n## Parameters\n\n- `:trainingId` - Training ID\n- `:sheetId` - Sheet ID\n- `:traineeId` - Trainee ID\n\n## How It Works\n\n1. Fetches latest standings from Codeforces\n2. Updates the trainee's performance data for that sheet\n\n## Usage\n\nUseful for refreshing individual trainee data."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Contest Performance",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/standings/trainings/:trainingId/contests/:contestId/trainees/:traineeId/update",
+							"host": ["{{base_url}}"],
+							"path": ["api", "standings", "trainings", ":trainingId", "contests", ":contestId", "trainees", ":traineeId", "update"],
+							"variable": [
+								{
+									"key": "trainingId",
+									"value": "TRAINING_ID_HERE"
+								},
+								{
+									"key": "contestId",
+									"value": "CONTEST_ID_HERE"
+								},
+								{
+									"key": "traineeId",
+									"value": "TRAINEE_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nManually update a trainee's performance for a specific contest.\n\n## Parameters\n\n- `:trainingId` - Training ID\n- `:contestId` - Contest ID\n- `:traineeId` - Trainee ID\n\n## How It Works\n\n1. Fetches latest standings from Codeforces\n2. Updates the trainee's performance data for that contest\n\n## Usage\n\nUseful for refreshing individual trainee data."
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Update Sheet Performance",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/standings/trainings/:trainingId/sheets/:sheetId/bulk-update",
+							"host": ["{{base_url}}"],
+							"path": ["api", "standings", "trainings", ":trainingId", "sheets", ":sheetId", "bulk-update"],
+							"variable": [
+								{
+									"key": "trainingId",
+									"value": "TRAINING_ID_HERE"
+								},
+								{
+									"key": "sheetId",
+									"value": "SHEET_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nUpdate performance data for all trainees in a training for a specific sheet.\n\n## Parameters\n\n- `:trainingId` - Training ID\n- `:sheetId` - Sheet ID\n\n## How It Works\n\n1. Fetches latest standings from Codeforces for all trainees\n2. Updates their performance\n3. Clears and refreshes the cache for this sheet\n\n## Benefits\n\n✅ More efficient than updating trainees individually"
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Update Contest Performance",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/standings/trainings/:trainingId/contests/:contestId/bulk-update",
+							"host": ["{{base_url}}"],
+							"path": ["api", "standings", "trainings", ":trainingId", "contests", ":contestId", "bulk-update"],
+							"variable": [
+								{
+									"key": "trainingId",
+									"value": "TRAINING_ID_HERE"
+								},
+								{
+									"key": "contestId",
+									"value": "CONTEST_ID_HERE"
+								}
+							]
+						},
+						"description": "## Overview\n\nUpdate performance data for all trainees in a training for a specific contest.\n\n## Parameters\n\n- `:trainingId` - Training ID\n- `:contestId` - Contest ID\n\n## How It Works\n\n1. Fetches latest standings from Codeforces for all trainees\n2. Updates their performance\n3. Clears and refreshes the cache for this contest\n\n## Benefits\n\n✅ More efficient than updating trainees individually"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000",
+			"type": "string"
+		}
+	]
+}
+
